@@ -1,185 +1,221 @@
-<!doctype html>
+<?php
+// Start session only if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-<html
-  lang="en"
-  class="layout-wide customizer-hide"
-  dir="ltr"
-  data-skin="default"
-  data-assets-path="assets/"
-  data-template="vertical-menu-template"
-  data-bs-theme="light">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+require_once 'auth_functions.php';
 
-    <title>Demo: Reset Password Basic - Pages | Sneat - Bootstrap Dashboard PRO</title>
+// Check if token is provided (for password reset form)
+$token = isset($_GET['token']) ? $_GET['token'] : null;
 
-    <meta name="description" content="" />
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['email'])) {
+        // Request password reset
+        $email = trim($_POST['email']);
+        $result = generateResetToken($email);
+        
+        if ($result['success']) {
+            // Send password reset email
+            if (sendPasswordResetEmail($result['email'], $result['token'])) {
+                $_SESSION['reset_message'] = "Password reset link has been sent to your email.";
+                header("Location: resetpassword.php");
+                exit();
+            } else {
+                $_SESSION['reset_error'] = "Failed to send reset email. Please try again later.";
+                header("Location: resetpassword.php");
+                exit();
+            }
+        } else {
+            $_SESSION['reset_error'] = $result['message'];
+            header("Location: resetpassword.php");
+            exit();
+        }
+    } elseif (isset($_POST['password']) && isset($_POST['confirm_password']) && $token) {
+        // Process password reset
+        $password = trim($_POST['password']);
+        $confirmPassword = trim($_POST['confirm_password']);
+        
+        if ($password !== $confirmPassword) {
+            $_SESSION['reset_error'] = "Passwords don't match";
+            header("Location: resetpassword.php?token=$token");
+            exit();
+        } else {
+            $result = resetPassword($token, $password);
+            
+            if ($result['success']) {
+                $_SESSION['reset_success'] = "Password reset successfully! You can now login with your new password.";
+                header('Location: login.php');
+                exit();
+            } else {
+                $_SESSION['reset_error'] = $result['message'];
+                header("Location: resetpassword.php?token=$token");
+                exit();
+            }
+        }
+    }
+}
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/img/favicon/favicon.ico" />
+// Check for messages from session
+$error = isset($_SESSION['reset_error']) ? $_SESSION['reset_error'] : null;
+unset($_SESSION['reset_error']);
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
-      rel="stylesheet" />
+$success = isset($_SESSION['reset_message']) ? $_SESSION['reset_message'] : null;
+unset($_SESSION['reset_message']);
 
-    <link rel="stylesheet" href="assets/vendor/fonts/iconify-icons.css" />
-
-    <!-- Core CSS -->
-    <!-- build:css assets/vendor/css/theme.css  -->
-
-    <link rel="stylesheet" href="assets/vendor/libs/pickr/pickr-themes.css" />
-
-    <link rel="stylesheet" href="assets/vendor/css/core.css" />
-    <link rel="stylesheet" href="assets/css/demo.css" />
-
-    <!-- Vendors CSS -->
-
-    <link rel="stylesheet" href="assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-
-    <!-- endbuild -->
-
-    <!-- Vendor -->
-    <link rel="stylesheet" href="assets/vendor/libs/@form-validation/form-validation.css" />
-
-    <!-- Page CSS -->
-    <!-- Page -->
-    <link rel="stylesheet" href="assets/vendor/css/pages/page-auth.css" />
-
-    <!-- Helpers -->
-    <script src="assets/vendor/js/helpers.js"></script>
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-
-    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
-    <script src="assets/vendor/js/template-customizer.js"></script>
-
-    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
-
-    <script src="assets/js/config.js"></script>
-  </head>
-
-  <body>
-    <!-- Content -->
-
-    <div class="container-xxl">
-      <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner">
-          <!-- Reset Password -->
-          <div class="card px-sm-6 px-0">
-            <div class="card-body">
-           <!-- Logo -->
-<div class="app-brand justify-content-center">
-  <a href="index.html" class="app-brand-link gap-2">
-    <span class="app-brand-logo demo">
-      <span class="text-primary">
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 32 32"
-          version="1.1"
-          xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink">
-          <defs>
-            <linearGradient id="TSgradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#7367F0;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#A66FFE;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-            <rect fill="url(#TSgradient)" x="0" y="0" width="32" height="32" rx="6"></rect>
-            <text x="16" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#FFFFFF">TS</text>
-          </g>
-        </svg>
-      </span>
-    </span>
-    <span class="app-brand-text demo text-heading fw-bold" style="letter-spacing: 1px;">TRANSPASS</span>
-  </a>
-</div>
-<!-- /Logo -->
-              <h4 class="mb-1">Reset Password 🔒</h4>
-              <p class="mb-6">
-                <span class="fw-medium">Your new password must be different from previously used passwords</span>
-              </p>
-              <form id="formAuthentication" action="auth-login-basic.html" method="GET">
-                <div class="mb-6 form-password-toggle form-control-validation">
-                  <label class="form-label" for="password">New Password</label>
-                  <div class="input-group input-group-merge">
-                    <input
-                      type="password"
-                      id="password"
-                      class="form-control"
-                      name="password"
-                      placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
-                      aria-describedby="password" />
-                    <span class="input-group-text cursor-pointer"><i class="icon-base bx bx-hide"></i></span>
-                  </div>
-                </div>
-                <div class="mb-6 form-password-toggle form-control-validation">
-                  <label class="form-label" for="confirm-password">Confirm Password</label>
-                  <div class="input-group input-group-merge">
-                    <input
-                      type="password"
-                      id="confirm-password"
-                      class="form-control"
-                      name="confirm-password"
-                      placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
-                      aria-describedby="password" />
-                    <span class="input-group-text cursor-pointer"><i class="icon-base bx bx-hide"></i></span>
-                  </div>
-                </div>
-                <button class="btn btn-primary d-grid w-100 mb-6">Set new password</button>
-                <div class="text-center">
-                  <a href="login.php">
-                    <i class="icon-base bx bx-chevron-left scaleX-n1-rtl me-1 align-top"></i>
-                    Back to login
-                  </a>
-                </div>
-              </form>
-            </div>
+$reset_success = isset($_SESSION['reset_success']) ? $_SESSION['reset_success'] : null;
+unset($_SESSION['reset_success']);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password | Transpass</title>
+    <?php include 'includes/header.php'; ?>
+</head>
+<body>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card mt-5">
+        <div class="card-body p-4">
+            <!-- Logo -->
+          <div class="app-brand justify-content-center mb-4">
+            <a href="lander.php" class="app-brand-link gap-2">
+              <span class="app-brand-logo demo">
+                <span class="text-primary">
+                  <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="TSgradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#7367F0;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#A66FFE;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                    <rect fill="url(#TSgradient)" x="0" y="0" width="32" height="32" rx="6"></rect>
+                    <text x="16" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#FFFFFF">TS</text>
+                  </svg>
+                </span>
+              </span>
+              <span class="app-brand-text demo text-heading fw-bold">UG TransPass</span>
+            </a>
           </div>
-          <!-- /Reset Password -->
+
+          <?php if ($token): ?>
+            <!-- Password Reset Form -->
+            <div class="text-center mb-4">
+              <h4 class="fw-bold">Reset Password 🔒</h4>
+              <p class="text-muted">Your new password must be different from previously used passwords</p>
+            </div>
+
+            <?php if (isset($error)): ?>
+              <div class="alert alert-danger mb-4"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <form method="POST">
+              <div class="mb-3">
+                <label for="password" class="form-label">New Password</label>
+                <div class="input-group">
+                  <input
+                    type="password"
+                    id="password"
+                    class="form-control"
+                    name="password"
+                    placeholder="Enter new password"
+                    required>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                    <i class="bx bx-hide"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <div class="input-group">
+                  <input
+                    type="password"
+                    id="confirm_password"
+                    class="form-control"
+                    name="confirm_password"
+                    placeholder="Confirm new password"
+                    required>
+                  <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                    <i class="bx bx-hide"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-100 mb-3">Set New Password</button>
+            </form>
+            
+          <?php else: ?>
+            <!-- Forgot Password Form -->
+            <div class="text-center mb-4">
+              <h4 class="fw-bold">Forgot Password? 🔒</h4>
+              <p class="text-muted">Enter your email and we'll send you a password reset link</p>
+            </div>
+
+            <?php if (isset($error)): ?>
+              <div class="alert alert-danger mb-4"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+            
+            <?php if (isset($success)): ?>
+              <div class="alert alert-success mb-4"><?php echo htmlspecialchars($success); ?></div>
+            <?php endif; ?>
+            
+            <?php if (isset($reset_success)): ?>
+              <div class="alert alert-success mb-4"><?php echo htmlspecialchars($reset_success); ?></div>
+            <?php endif; ?>
+
+            <form method="POST">
+              <div class="mb-4">
+                <label for="email" class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  required
+                  autofocus>
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-100 mb-3">Send Reset Link</button>
+            </form>
+          <?php endif; ?>
+
+          <div class="text-center mt-3">
+            <a href="login.php" class="text-decoration-none">
+              <i class="bx bx-chevron-left me-1"></i>
+              Back to login
+            </a>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- / Content -->
+<script>
+  // Toggle password visibility
+  document.getElementById('togglePassword')?.addEventListener('click', function() {
+    const password = document.getElementById('password');
+    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type);
+    this.querySelector('i').classList.toggle('bx-show');
+    this.querySelector('i').classList.toggle('bx-hide');
+  });
 
-    <!-- Core JS -->
-    <!-- build:js assets/vendor/js/theme.js  -->
+  document.getElementById('toggleConfirmPassword')?.addEventListener('click', function() {
+    const confirmPassword = document.getElementById('confirm_password');
+    const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+    confirmPassword.setAttribute('type', type);
+    this.querySelector('i').classList.toggle('bx-show');
+    this.querySelector('i').classList.toggle('bx-hide');
+  });
+</script>
 
-    <script src="assets/vendor/libs/jquery/jquery.js"></script>
-
-    <script src="assets/vendor/libs/popper/popper.js"></script>
-    <script src="assets/vendor/js/bootstrap.js"></script>
-    <script src="assets/vendor/libs/@algolia/autocomplete-js.js"></script>
-
-    <script src="assets/vendor/libs/pickr/pickr.js"></script>
-
-    <script src="assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-
-    <script src="assets/vendor/libs/hammer/hammer.js"></script>
-
-    <script src="assets/vendor/libs/i18n/i18n.js"></script>
-
-    <script src="assets/vendor/js/menu.js"></script>
-
-    <!-- endbuild -->
-
-    <!-- Vendors JS -->
-    <script src="assets/vendor/libs/@form-validation/popular.js"></script>
-    <script src="assets/vendor/libs/@form-validation/bootstrap5.js"></script>
-    <script src="assets/vendor/libs/@form-validation/auto-focus.js"></script>
-
-    <!-- Main JS -->
-
-    <script src="assets/js/main.js"></script>
-
-    <!-- Page JS -->
-    <script src="assets/js/pages-auth.js"></script>
-  </body>
+<?php include 'includes/scripts.php'; ?>
+</body>
 </html>

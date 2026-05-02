@@ -1,47 +1,22 @@
+<!-- Footer -->
+<footer class="content-footer footer bg-footer-theme shadow-sm border-top">
+  <div class="container-xxl d-flex flex-wrap justify-content-between align-items-center py-3 flex-md-row flex-column">
+    
+    <!-- Left Side -->
+    <div class="mb-2 mb-md-0 text-muted d-flex align-items-center">
+      <i class="bx bx-bus me-2 fs-5 text-primary"></i>
+      <span>
+        © <script>document.write(new Date().getFullYear())</script> 
+        <strong>TransPass</strong> - Transport Management System
+      </span>
+    </div>
 
-            <!-- Footer -->
-            <footer class="content-footer footer bg-footer-theme">
-              <div class="container-xxl">
-                <div
-                  class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-                  <div class="mb-2 mb-md-0">
-                    ©
-                    <script>
-                      document.write(new Date().getFullYear());
-                    </script>
-                    , made with ❤️ by
-                    <a href="https://themeselection.com" target="_blank" class="footer-link">ThemeSelection</a>
-                  </div>
-                  <div class="d-none d-lg-inline-block">
-                    <a href="https://themeselection.com/license/" class="footer-link me-4" target="_blank">License</a>
-                    <a href="https://themeselection.com/" target="_blank" class="footer-link me-4">More Themes</a>
+    <!-- Right Side -->
+    <div class="text-muted d-flex align-items-center">
+      <small class="me-2">Developed by <strong>Paul Sarfo</strong></small>
+      <i class="bx bx-code-alt text-success fs-5"></i>
+    </div>
 
-                    <a
-                      href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation/"
-                      target="_blank"
-                      class="footer-link me-4"
-                      >Documentation</a
-                    >
-
-                    <a
-                      href="https://themeselection.com/support/"
-                      target="_blank"
-                      class="footer-link d-none d-sm-inline-block"
-                      >Support</a
-                    >
-                  </div>
-                </div>
-              </div>
-            </footer>
-            <!-- / Footer -->
-
-            <div class="content-backdrop fade"></div>
-          </div>
-          <!-- Content wrapper -->
-
-
-
-
-          </body>
-
-         </html>
+  </div>
+</footer>
+<!-- / Footer -->
